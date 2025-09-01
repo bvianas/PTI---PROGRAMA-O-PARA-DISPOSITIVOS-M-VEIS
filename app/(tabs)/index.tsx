@@ -1,75 +1,157 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from "react";
+import {
+  Alert,
+  FlatList,
+  Image,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+type Product = { name: string; description: string; price: number; image: string };
 
-export default function HomeScreen() {
+function formatBRL(v: number) {
+  try {
+    return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  } catch {
+    return `R$ ${Number(v).toFixed(2)}`.replace(".", ",");
+  }
+}
+
+function ProductCard({ item, cardWidth }: { item: Product; cardWidth: number }) {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={[styles.card, { width: cardWidth }]}>
+      <Image
+        source={{ uri: item.image }}
+        style={styles.cover}
+        resizeMode="cover"
+      />
+
+      <Text style={styles.title} numberOfLines={2}>
+        {item.name}
+      </Text>
+
+      <Text style={styles.desc} numberOfLines={2}>
+        {item.description}
+      </Text>
+
+      <View style={styles.row}>
+        <Text style={styles.price}>{formatBRL(item.price)}</Text>
+        <TouchableOpacity
+          style={styles.btn}
+          activeOpacity={0.8}
+          onPress={() => Alert.alert("Adicionado", `Added: ${item.name}`)}
+        >
+          <Text style={styles.btnText}>Add</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+export default function Index() {
+
+  const products: Product[] = [
+    {
+      name: "Pizza de calabresa com cebola caramelizada",
+      description:
+        "Pizza G, com molho de tomate, queijo mussarela e cebola caramelizada.",
+      price: 70,
+      image:
+        "https://uploads.metroimg.com/wp-content/uploads/2021/12/14161021/Calabresa-Caramelizada-com-molho-de-tomate-mucarela-linguica-calabresa-fatiada-cebola-caramelizada-azeitonas-pretas-e-oregano.jpeg",
+    },
+    {
+      name: "Batata frita com cheedar e bacon",
+      description: "Porção média com cheddar e bacon.",
+      price: 15,
+      image:
+        "https://softpig.com.br/wp-content/uploads/2023/10/Batata-frita-com-cheddar-e-bacon-Receita-softpig.jpg",
+    },
+    {
+      name: "Morango do Amor",
+      description: "Morango com brigadeiro branco e calda caramelizada.",
+      price: 20,
+      image:
+        "https://canaldareceita.com.br/wp-content/uploads/2025/08/Design-sem-nome-3.webp",
+    },
+  ];
+
+
+  const { width } = useWindowDimensions();
+  const maxWidth = 1200;              
+  const columns = 2;
+  const horizontalPadding = 16;
+  const gap = 12;
+  const containerWidth = Math.min(width, maxWidth);
+  const cardWidth = (containerWidth - horizontalPadding * 2 - gap) / columns;
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="light-content" />
+      <Text style={styles.header}>🍔 Cardápio</Text>
+
+      <FlatList
+        data={products}
+        keyExtractor={(item, i) => `${item.name}-${i}`}
+        numColumns={columns}
+        columnWrapperStyle={{ gap }}
+        contentContainerStyle={{
+          paddingHorizontal: horizontalPadding,
+          paddingBottom: 24,
+          gap,
+          alignSelf: "center",     
+          width: containerWidth,   
+        }}
+        renderItem={({ item }) => (
+          <ProductCard item={item} cardWidth={cardWidth} />
+        )}
+        showsVerticalScrollIndicator={false}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  safe: { flex: 1, backgroundColor: "#000" },
+  header: {
+    color: "#fff",
+    textAlign: "center",
+    fontSize: 24,
+    fontWeight: "800",
+    marginVertical: 16,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    // sombra iOS
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    
+    elevation: 3,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+
+  cover: {
+    width: "100%",
+    aspectRatio: 16 / 9, 
+    borderRadius: 12,
+    marginBottom: 10,
   },
+  title: { fontSize: 16, fontWeight: "700" },
+  desc: { color: "#6b7280", fontSize: 13, marginTop: 2, minHeight: 34 },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  price: { fontWeight: "800", fontSize: 16 },
+  btn: { borderRadius: 8, backgroundColor: "#22c55e", paddingVertical: 6, paddingHorizontal: 14 },
+  btnText: { fontWeight: "700", color: "#000" },
 });
